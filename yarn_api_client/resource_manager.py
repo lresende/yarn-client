@@ -20,8 +20,8 @@ class ResourceManager(BaseYarnAPI):
     :param int port: ResourceManager HTTP port
     :param int timeout: API connection timeout in seconds
     """
-    def __init__(self, address=None, port=8088, timeout=30):
-        self.address, self.port, self.timeout = address, port, timeout
+    def __init__(self, address=None, port=8088, api_endpoint='/ws/v1', username=None, password=None, timeout=30):
+        self.address, self.port, self.api_endpoint, self.username, self.password, self.timeout = address, port, api_endpoint, username, password, timeout
         if address is None:
             self.logger.debug('Get configuration from hadoop conf dir')
             address, port = get_resource_manager_host_port()
@@ -35,7 +35,7 @@ class ResourceManager(BaseYarnAPI):
         :returns: API response object with JSON data
         :rtype: :py:class:`yarn_api_client.base.Response`
         """
-        path = '/ws/v1/cluster/info'
+        path = self.api_endpoint + '/cluster/info'
         return self.request(path)
 
     def cluster_metrics(self):
@@ -47,7 +47,7 @@ class ResourceManager(BaseYarnAPI):
         :returns: API response object with JSON data
         :rtype: :py:class:`yarn_api_client.base.Response`
         """
-        path = '/ws/v1/cluster/metrics'
+        path = self.api_endpoint + '/cluster/metrics'
         return self.request(path)
 
     def cluster_scheduler(self):
@@ -61,7 +61,7 @@ class ResourceManager(BaseYarnAPI):
         :returns: API response object with JSON data
         :rtype: :py:class:`yarn_api_client.base.Response`
         """
-        path = '/ws/v1/cluster/scheduler'
+        path = self.api_endpoint + '/cluster/scheduler'
         return self.request(path)
 
     def cluster_applications(self, state=None, final_status=None,
@@ -91,7 +91,7 @@ class ResourceManager(BaseYarnAPI):
         :raises yarn_api_client.errors.IllegalArgumentError: if `state` or
             `final_status` incorrect
         """
-        path = '/ws/v1/cluster/apps'
+        path = self.api_endpoint + '/cluster/apps'
 
         legal_states = set([s for s, _ in YarnApplicationState])
         if state is not None and state not in legal_states:
@@ -141,7 +141,7 @@ class ResourceManager(BaseYarnAPI):
         :returns: API response object with JSON data
         :rtype: :py:class:`yarn_api_client.base.Response`
         """
-        path = '/ws/v1/cluster/appstatistics'
+        path = self.api_endpoint + '/cluster/appstatistics'
 
         # TODO: validate state argument
         states = ','.join(state_list) if state_list is not None else None
@@ -166,7 +166,7 @@ class ResourceManager(BaseYarnAPI):
         :returns: API response object with JSON data
         :rtype: :py:class:`yarn_api_client.base.Response`
         """
-        path = '/ws/v1/cluster/apps/{appid}'.format(appid=application_id)
+        path = self.api_endpoint + '/cluster/apps/{appid}'.format(appid=application_id)
 
         return self.request(path)
 
@@ -179,7 +179,7 @@ class ResourceManager(BaseYarnAPI):
         :returns: API response object with JSON data
         :rtype: :py:class:`yarn_api_client.base.Response`
         """
-        path = '/ws/v1/cluster/apps/{appid}/appattempts'.format(
+        path = self.api_endpoint + '/cluster/apps/{appid}/appattempts'.format(
             appid=application_id)
 
         return self.request(path)
@@ -194,7 +194,7 @@ class ResourceManager(BaseYarnAPI):
         :raises yarn_api_client.errors.IllegalArgumentError: if `healthy`
             incorrect
         """
-        path = '/ws/v1/cluster/nodes'
+        path = self.api_endpoint + '/cluster/nodes'
         # TODO: validate state argument
 
         legal_healthy = ['true', 'false']
@@ -218,6 +218,6 @@ class ResourceManager(BaseYarnAPI):
         :returns: API response object with JSON data
         :rtype: :py:class:`yarn_api_client.base.Response`
         """
-        path = '/ws/v1/cluster/nodes/{nodeid}'.format(nodeid=node_id)
+        path = self.api_endpoint + '/cluster/nodes/{nodeid}'.format(nodeid=node_id)
 
         return self.request(path)

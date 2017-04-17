@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 try:
-    from httplib import HTTPConnection, OK
+    from httplib import HTTPConnection, HTTPSConnection, OK
 except ImportError:
-    from http.client import HTTPConnection, OK
+    from http.client import HTTPConnection, HTTPSConnection, OK
+import ssl
+from base64 import b64encode, b64decode
 import json
 import logging
 try:
@@ -29,10 +31,24 @@ class BaseYarnAPI(object):
         else:
             path = api_path
 
-        self.logger.info('Request http://%s:%s%s', self.address, self.port, path)
-        
+        self.logger.info('Request https://%s:%s%s', self.address, self.port, path)
+
+        headers = None
+        if(self.username and self.password):
+            #we need to base 64 encode it
+            #and then decode it to acsii as python 3 stores it as a byte string
+            credentials = bytes('%s:%s' % (self.username, self.password), 'utf-8')
+            print(credentials)
+            userAndPass = b64encode(credentials).decode('ascii')
+            print(userAndPass)
+            print(b64decode(userAndPass))
+            headers = { 'Authorization' : 'Basic %s' %  userAndPass }
+            print(headers)
+
+
+        print(path)
         http_conn = self.http_conn
-        http_conn.request('GET', path)
+        http_conn.request('GET', path, headers=headers)
         response = http_conn.getresponse()
 
         if response.status == OK:
@@ -51,7 +67,9 @@ class BaseYarnAPI(object):
             raise ConfigurationError('API address is not set')
         elif self.port is None:
             raise ConfigurationError('API port is not set')
-        return HTTPConnection(self.address, self.port, timeout=self.timeout)
+
+        print('connecting to ' + self.address, self.port)
+        return HTTPSConnection(self.address, self.port, timeout=self.timeout, context=ssl._create_unverified_context())
 
     __logger = None
     @property
