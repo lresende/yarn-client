@@ -37,21 +37,25 @@ class BaseYarnAPI(object):
         self.logger.info('Request %s://%s:%s/%s', self.scheme, self.hostname, self.port, path)
 
         headers = None
-        if (self.username and self.password):
-            # we need to base 64 encode it
-            # and then decode it to acsii as python 3 stores it as a byte string
+        if hasattr(self, 'username') and hasattr(self, 'password'):
+            if (self.username and self.password):
+                # we need to base 64 encode it
+                # and then decode it to acsii as python 3 stores it as a byte string
 
-            # if python 2.x bytes has no 'utf-8' flag
-            if PYTHON_VERSION == 3:
-                credentials = bytes('%s:%s' % (self.username, self.password), 'utf-8')
-            else:
-                credentials = bytes('%s:%s' % (self.username, self.password))
+                # if python 2.x bytes has no 'utf-8' flag
+                if PYTHON_VERSION == 3:
+                    credentials = bytes('%s:%s' % (self.username, self.password), 'utf-8')
+                else:
+                    credentials = bytes('%s:%s' % (self.username, self.password))
 
-            encodedCredentials = b64encode(credentials).decode('ascii')
-            headers = {'Authorization': 'Basic %s' % encodedCredentials}
+                encodedCredentials = b64encode(credentials).decode('ascii')
+                headers = {'Authorization': 'Basic %s' % encodedCredentials}
 
         http_conn = self.http_conn
-        http_conn.request('GET', path, headers=headers)
+        if headers is None:
+            http_conn.request('GET', path)
+        else:
+            http_conn.request('GET', path, headers=headers)
         response = http_conn.getresponse()
 
         if response.status == OK:
