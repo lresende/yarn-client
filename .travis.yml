@@ -9,5 +9,6 @@ env:
   - TOXENV=py27
   - TOXENV=py34
   - TOXENV=py35
+  - TOXENV=py36
 after_success:
   coveralls
